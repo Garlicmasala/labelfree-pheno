@@ -1,0 +1,88 @@
+"""Kaggle-ready training & analysis notebook (run inside a Kaggle Notebook with GPU).
+
+Recommended: copy this file into a Kaggle Notebook (GPU T4/P100, free quota) and run all cells:
+  1. Environment: clone the public repo (or upload this folder as a zip input)
+  2. Data: download Caco-2 Virtual-Staining (figshare) + build pairs
+  3. Module A: train AttResUNet (GPU config, 60 epochs) -> MC-dropout inference -> evaluation
+  4. Module B: label-free viability vs. real stain agreement
+  5. Module C: RxRx3-core dose-response phenomics (Hill fits, EC50/Emax/R^2)
+
+All data is public and permissively licensed (CC-BY); no private or paid resources.
+"""
+# %% [markdown]
+# # labelfree-pheno on Kaggle — AI4S Open Innovation: AI for Life Science
+# **Category: End-to-End System** · Modules: A virtual staining · B phenotyping · C pharmacology
+# All public data · free Kaggle GPU · ~1.5h end-to-end
+
+# %% [code]
+import os, subprocess, sys
+ROOT = "/kaggle/working"
+os.makedirs(ROOT, exist_ok=True)
+os.chdir(ROOT)
+
+REPO = "labelfree-pheno"
+if not os.path.exists(REPO):
+    # >>> Replace YOUR_ORG with your public GitHub org after pushing the repo. <<<
+    # Alternative (no GitHub needed): upload this folder as a Kaggle input zip,
+    # then: !unzip -q ../input/*.zip
+    subprocess.run(
+        ["git", "clone", "--depth", "1", "https://github.com/YOUR_ORG/labelfree-pheno.git"],
+        check=True, capture_output=True,
+    )
+os.chdir(REPO)
+sys.path.insert(0, os.path.join(os.getcwd(), "src"))
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "scikit-image", "tqdm", "pyarrow", "huggingface_hub"], check=True)
+
+# %% [markdown]
+# ## Step 1 — Data: Caco-2 Virtual-Staining (figshare, CC-BY)
+# 482 MB download (multi-threaded); builds slide-stratified 198/20/34 pairs.
+# %% [code]
+from pathlib import Path
+DATA = Path("data/caco2")
+DATA.mkdir(parents=True, exist_ok=True)
+if not (DATA / "raw").exists():
+    !python data/download_caco2_fast.py --out data/caco2
+if not (DATA / "pairs.csv").exists():
+    !python data/make_caco2_pairs.py --root data/caco2
+
+# %% [markdown]
+# ## Step 2 — Module A: train (GPU, 60 epochs, base64/depth4 + perceptual)
+# Full recipe config: `configs/train_caco2.yaml`
+# %% [code]
+!python -m labelfree.train --config configs/train_caco2.yaml --out runs/caco2 --epochs 60 --device cuda
+
+# %% [markdown]
+# ## Step 3 — Module A: MC-dropout inference + per-channel evaluation
+# %% [code]
+!python -m labelfree.infer --config configs/infer.yaml --ckpt runs/caco2/best.ckpt \
+    --csv data/caco2/pairs.csv --root data/caco2/raw --split test \
+    --crop 256 --mc-samples 3 --out runs/caco2/infer
+!python -m labelfree.evaluate_cli --csv data/caco2/pairs.csv --root data/caco2/raw \
+    --pred-dir runs/caco2/infer --split test --crop 256 --out runs/caco2/eval
+import json
+print(json.dumps(json.load(open("runs/caco2/eval/summary.json")), indent=2))
+
+# %% [markdown]
+# ## Step 4 — Module B: label-free viability vs. real stain
+# %% [code]
+!python scripts/viability_agreement.py --run runs/caco2 --out report/assets
+!python scripts/make_figures.py --run runs/caco2 --out report/assets --n 4
+
+# %% [markdown]
+# ## Step 5 — Module C: RxRx3-core dose-response phenomics (optional, ~5 min)
+# OpenPhenom embeddings + metadata only (no image downloads); Hill fits per compound.
+# %% [code]
+!python scripts/rxrx3_dose_response.py --out runs/rxrx3
+import json
+fits = json.load(open("runs/rxrx3/dose_response_fits.json"))
+print("compounds fitted:", len(fits.get("fits", [])))
+print(json.dumps(fits.get("examples", {}), indent=2))
+
+# %% [markdown]
+# ## Outputs (download these for the submission)
+# - `runs/caco2/eval/summary.json` — per-channel PSNR/SSIM (test split)
+# - `runs/caco2/infer/*_pred_*.png` — virtual-stain + uncertainty images
+# - `runs/caco2/viability_agreement.json` — Module B agreement
+# - `runs/rxrx3/dose_response_fits.json` — Module C Hill fits (EC50/Emax/R^2)
+# - `runs/caco2/best.ckpt` — trained model
+# Cite these numbers in the technical report; the CPU quick-run reference is in `runs/`.

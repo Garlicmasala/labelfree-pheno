@@ -1,0 +1,23 @@
+# Mini real-data run — CPU-friendly (base32 / depth3 / 192 crop / 8 epochs / 120 fields)
+seed: 42
+out: runs/caco2_mini
+data:
+  synthetic: false
+  pairs_csv: data/caco2/pairs.csv
+  root: data/caco2/raw
+  crop: 192
+  limit: 120
+  in_ch: 1
+  out_ch: 2
+model:
+  base: 32
+  depth: 3
+  attn: true
+  dropout: 0.1
+train:
+  epochs: 30
+  batch: 8
+  lr: 0.0006
+  wd: 0.0001
+  w_fourier: 0.5
+  w_perceptual: 0.0

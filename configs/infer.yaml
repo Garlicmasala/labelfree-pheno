@@ -1,0 +1,10 @@
+# Inference configuration (shared by infer / evaluate CLIs)
+seed: 42
+data:
+  in_ch: 1
+  out_ch: 2
+model:
+  base: 32
+  depth: 3
+  attn: true
+  dropout: 0.1

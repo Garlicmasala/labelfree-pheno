@@ -1,0 +1,34 @@
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# data (large, downloadable via scripts)
+data/caco2/raw/
+data/synthetic/
+data/rxrx3/
+
+# model checkpoints & logs
+*.ckpt
+*.log
+
+# runs: keep only small evidence artifacts (metrics), exclude images/checkpoints
+runs/*
+!runs/*/train_log.csv
+!runs/*/eval/
+!runs/*/eval/*
+!runs/*/viability_agreement.json
+!runs/rxrx3/
+!runs/rxrx3/*.csv
+!runs/rxrx3/*.json
+runs/rxrx3/*.png
+
+# report figures are maintained at the project root (../report), not inside the repo
+report/
+
+# tools
+.DS_Store
+.idea/
+.vscode/

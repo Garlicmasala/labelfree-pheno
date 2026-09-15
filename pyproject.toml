@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labelfree-pheno"
+version = "0.2.0"
+description = "Label-free phenotyping of organ-on-a-chip microscopy: virtual staining + viability + dose-response"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1",
+    "torchvision>=0.16",
+    "numpy",
+    "pandas",
+    "scipy",
+    "scikit-image",
+    "scikit-learn",
+    "PyYAML",
+    "Pillow",
+    "matplotlib",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+rxrx3 = ["huggingface_hub", "pyarrow"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

@@ -1,0 +1,21 @@
+# Smoke test — synthetic data, tiny model, 4 epochs (CPU ~3-5 min)
+seed: 42
+out: runs/smoke
+data:
+  synthetic: true
+  n: 128
+  crop: 64
+  in_ch: 1
+  out_ch: 2
+model:
+  base: 16
+  depth: 3
+  attn: true
+  dropout: 0.1
+train:
+  epochs: 10
+  batch: 16
+  lr: 0.002
+  wd: 0.0
+  w_fourier: 0.5
+  w_perceptual: 0.0

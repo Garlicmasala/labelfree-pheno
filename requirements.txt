@@ -1,0 +1,13 @@
+torch>=2.1
+torchvision>=0.16
+numpy
+pandas
+scipy
+scikit-image
+scikit-learn
+PyYAML
+Pillow
+matplotlib
+tqdm
+huggingface_hub
+pyarrow
