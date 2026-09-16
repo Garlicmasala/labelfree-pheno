@@ -36,7 +36,7 @@ free to reproduce** on public data and free compute.
 ## Quick start (CPU, ~30-45 min)
 
 ```bash
-git clone https://github.com/<org>/labelfree-pheno.git && cd labelfree-pheno
+git clone https://github.com/Garlicmasala/labelfree-pheno.git && cd labelfree-pheno
 pip install -r requirements.txt
 python scripts/smoke_test.py                        # E2E CI on synthetic data (~4 min)
 python scripts/run_caco2_pipeline.py --epochs 8 --limit 120   # real data mini run
