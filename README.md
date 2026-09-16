@@ -30,7 +30,7 @@ free to reproduce** on public data and free compute.
 | Validation PSNR / SSIM (CPU quick-run, best epoch) | **24.65 dB / 0.79** |
 | Held-out test overall (different camera/control) | **21.5 dB / 0.56** (green 19.8/0.59 · red 23.1/0.52) |
 | Viability readout vs. real stain | honestly reported (n = 34, not yet significant; uncertainty-aware path documented) |
-| Module C dose–response | **1,646 Hill fits**; Bortezomib EC50 ≈ 7 nM (R² = 0.97), digoxin ≈ 45 nM (R² = 0.98) |
+| Module C dose–response | **1,646 Hill fits**; Bortezomib EC50 ≈ 0.07 µM (R² = 0.966), digoxin ≈ 45 nM (R² = 0.981), RG-7112 ≈ 10.3 µM (R² = 0.895) |
 | Uncertainty | MC-dropout with Dropout2d(0.1) — verified non-zero (std max ≈ 0.28) |
 
 ## Quick start (CPU, ~30-45 min)
