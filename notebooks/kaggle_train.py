@@ -26,7 +26,7 @@ if not os.path.exists(REPO):
     # Alternative (no GitHub needed): upload this folder as a Kaggle input zip,
     # then: !unzip -q ../input/*.zip
     subprocess.run(
-        ["git", "clone", "--depth", "1", "https://github.com/YOUR_ORG/labelfree-pheno.git"],
+        ["git", "clone", "--depth", "1", "https://github.com/Garlicmasala/labelfree-pheno.git"],
         check=True, capture_output=True,
     )
 os.chdir(REPO)
@@ -41,22 +41,22 @@ from pathlib import Path
 DATA = Path("data/caco2")
 DATA.mkdir(parents=True, exist_ok=True)
 if not (DATA / "raw").exists():
-    !python data/download_caco2_fast.py --out data/caco2
+    !python data/download_caco2_fast.py --out data/caco2/raw
 if not (DATA / "pairs.csv").exists():
-    !python data/make_caco2_pairs.py --root data/caco2
+    !python data/make_caco2_pairs.py --root data/caco2/raw --out data/caco2/pairs.csv
 
 # %% [markdown]
 # ## Step 2 — Module A: train (GPU, 60 epochs, base64/depth4 + perceptual)
 # Full recipe config: `configs/train_caco2.yaml`
 # %% [code]
-!python -m labelfree.train --config configs/train_caco2.yaml --out runs/caco2 --epochs 60 --device cuda
+!python -m labelfree.train --config configs/train_caco2.yaml --out runs/caco2
 
 # %% [markdown]
 # ## Step 3 — Module A: MC-dropout inference + per-channel evaluation
 # %% [code]
 !python -m labelfree.infer --config configs/infer.yaml --ckpt runs/caco2/best.ckpt \
     --csv data/caco2/pairs.csv --root data/caco2/raw --split test \
-    --crop 256 --mc-samples 3 --out runs/caco2/infer
+    --crop 256 --mc-samples 3 --base 64 --depth 4 --out runs/caco2/infer
 !python -m labelfree.evaluate_cli --csv data/caco2/pairs.csv --root data/caco2/raw \
     --pred-dir runs/caco2/infer --split test --crop 256 --out runs/caco2/eval
 import json
@@ -75,8 +75,9 @@ print(json.dumps(json.load(open("runs/caco2/eval/summary.json")), indent=2))
 !python scripts/rxrx3_dose_response.py --out runs/rxrx3
 import json
 fits = json.load(open("runs/rxrx3/dose_response_fits.json"))
-print("compounds fitted:", len(fits.get("fits", [])))
-print(json.dumps(fits.get("examples", {}), indent=2))
+print("compounds fitted:", len(fits))
+for name, f in list(fits.items())[:3]:
+    print(f"  {name}: EC50={f['EC50']:.3f} uM  R2={f['R2']:.3f}")
 
 # %% [markdown]
 # ## Outputs (download these for the submission)
