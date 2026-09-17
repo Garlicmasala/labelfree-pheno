@@ -24,7 +24,25 @@ def load_config(path: str | Path) -> dict:
 
 
 def get_device() -> torch.device:
+    """TPU (torch_xla) first, then CUDA, then CPU."""
+    try:
+        import torch_xla.core.xla_model as xm
+        dev = xm.xla_device()
+        if dev is not None:
+            return dev
+    except Exception:
+        pass
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def mark_step(device: torch.device) -> None:
+    """Flush a lazy PyTorch/XLA step when running on TPU; no-op otherwise."""
+    if str(device).startswith("xla"):
+        try:
+            import torch_xla.core.xla_model as xm
+            xm.mark_step()
+        except Exception:
+            pass
 
 
 def read_image_gray(path: str | Path) -> np.ndarray:

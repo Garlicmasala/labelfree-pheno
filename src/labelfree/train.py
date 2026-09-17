@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from .datasets import Caco2PairsDataset, SyntheticPairsDataset
 from .losses import fourier_loss, l1_loss, make_vgg, perceptual_loss
 from .models import AttResUNet
-from .utils import get_device, load_config, set_seed
+from .utils import get_device, load_config, mark_step, set_seed
 from .evaluate import eval_metrics
 
 
@@ -84,12 +84,14 @@ def main():
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
+                mark_step(device)
                 total_loss += loss.item()
                 total_l1 += l1_loss(pred, y).item()
                 n_batch += 1
             sched.step()
 
             val_psnr, val_ssim = eval_metrics(model, val_loader, device)
+            mark_step(device)
             elapsed = time.time() - t0
             print(f"epoch {epoch:02d} loss={total_loss/n_batch:.4f} l1={total_l1/n_batch:.4f} "
                   f"val_psnr={val_psnr:.3f} val_ssim={val_ssim:.4f} ({elapsed:.0f}s)")

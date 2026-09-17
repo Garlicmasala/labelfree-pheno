@@ -15,6 +15,8 @@ def mc_dropout_infer(model, x, n: int = 3) -> tuple[torch.Tensor, torch.Tensor]:
     preds = []
     for _ in range(n):
         preds.append(model(x).unsqueeze(0))
+        from .utils import mark_step
+        mark_step(x.device)
     model.eval()
     stack = torch.cat(preds, 0)          # [n, C, H, W]
     mean = stack.mean(0)
